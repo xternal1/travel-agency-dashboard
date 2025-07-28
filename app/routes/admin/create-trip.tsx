@@ -1,17 +1,19 @@
 import { ComboBoxComponent } from "@syncfusion/ej2-react-dropdowns";
 import {Header} from "../../../components";
 import type {Route} from "./+types/create-trip";
-import { comboBoxItems, selectItems } from "~/constants";
-import {formatKey} from "../../../lib/utils";
+import { comboBoxItems, groupTypes, interests, selectItems, travelStyles } from "~/constants";
+import {cn, formatKey} from "../../../lib/utils";
 import { Coordinate, LayerDirective, MapsComponent, LayersDirective } from "@syncfusion/ej2-react-maps";
 import { useState } from "react";
 import { world_map } from "~/constants/world_map";
 import { ButtonComponent } from "@syncfusion/ej2-react-buttons";
+import { account } from "~/appwrite/client";
+import { useNavigate } from "react-router";
 
 export const loader = async() => {
   const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2,flag,latlng,maps');
   const data = await response.json();
-
+  
   return data.map((country: any) => ({
     name: country.flag + country.name.common,
     coordinates: country.latlng,
@@ -21,6 +23,7 @@ export const loader = async() => {
 }
 
 const CreateTrip = ({loaderData}: Route.ComponentProps ) => {
+  const navigate = useNavigate();
   const countries = loaderData as Country[];
   const [formData, setFormData] = useState<TripFormData>({
   country: countries[0]?.name || '',
@@ -44,8 +47,42 @@ const CreateTrip = ({loaderData}: Route.ComponentProps ) => {
       !formData.travelStyle
     ) {
       setError('Please fill in all the required fields');
-      setLoading(false);
+      setLoading(false)
       return;
+    }
+    if (formData.duration < 1 || formData.duration > 10 ){
+      setError('Please provide a duration between 1 to 10');
+      setLoading(false)
+      return;
+    }
+    const user = await account.get();
+    if(!user.$id){
+      console.error('User is not authenticated');
+      setLoading(false)
+      return;
+    }
+    try {
+      const response = await fetch('/api/create-trip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          country: formData.country,
+          numberOfDays: formData.duration,
+          travelStyle: formData.travelStyle, 
+          interests: formData.interest,
+          budget: formData.budget,
+          groupType: formData.groupType,    
+          userId: user.$id
+        })
+      });      
+      const result: CreateTripResponse = await response.json();
+      
+      if (result?.id) navigate(`/trips/${result.id}`)
+        else console.error('Failed to generate the trip')
+    } catch (e) {
+      console.error('Error generating trip', e);
+    } finally {
+      setLoading(false)
     }
   };
 
@@ -171,7 +208,7 @@ const CreateTrip = ({loaderData}: Route.ComponentProps ) => {
           )}
           <footer>
             <ButtonComponent type="submit" className="button-class !h-12 !w-full" disabled={loading}>
-              <img src={`/assets/icons/${loading ? 'loader.svg':'magic-star.svg'}`}/>
+              <img src={`/assets/icons/${loading ? 'loader.svg' : 'magic-star.svg'}`} className={cn("size-5", {'animate-spin': loading})}/>
               <span className="p-16-semibold text-white">
                 {loading ? 'Generating...' : 'Generate Trip'}
               </span>
