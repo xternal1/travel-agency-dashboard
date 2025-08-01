@@ -141,7 +141,7 @@ const CreateTrip = ({loaderData}: Route.ComponentProps ) => {
               />
           </div>
           <div>
-            <label htmlFor="duration"></label>
+            <label htmlFor="duration">Duration</label>
             <input
                 id="duration"
                 name="duration"

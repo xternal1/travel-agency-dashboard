@@ -26,10 +26,14 @@ export function parseMarkdownToJson(markdownText: string): unknown | null {
     return null;
 }
 
-export function parseTripData(jsonString: string): Trip | null {
+export function parseTripData(jsonString?: string): Trip | null {
+    if (!jsonString) {
+        console.error("parseTripData called with undefined or empty input");
+        return null;
+    }
+
     try {
         const data: Trip = JSON.parse(jsonString);
-
         return data;
     } catch (error) {
         console.error("Failed to parse trip data:", error);

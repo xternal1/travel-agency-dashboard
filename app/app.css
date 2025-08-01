@@ -542,3 +542,30 @@ body {
   top: 45px;
   right: 40px;
 }
+
+/* Animation */
+@keyframes scroll-loop {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-33.333%);
+  }
+}
+
+.scrolling-wrapper {
+  width: 300%;
+  animation: scroll-loop 12s linear infinite;
+}
+
+.logo-img {
+  width: 30px;
+  height: 30px;
+}
+
+.logo-text {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: black;
+  margin-left: 8px;
+}
